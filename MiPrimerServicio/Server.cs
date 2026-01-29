@@ -146,8 +146,7 @@ namespace MiPrimerServicio
                 string path = $"{Environment.GetEnvironmentVariable("programdata")}\\{FileName}.txt";
                 using (StreamReader reader = new StreamReader(path))
                 {
-                    int.TryParse(reader.ReadToEnd().Trim(), out int port);
-                    return port;
+                    return int.TryParse(reader.ReadToEnd().Trim(), out int port) ? port : 31416;
                 }
             }
             catch (IOException io)
