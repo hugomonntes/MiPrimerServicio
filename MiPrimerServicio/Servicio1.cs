@@ -12,6 +12,7 @@ namespace MiPrimerServicio
 {
     public partial class MiPrimerServicio : ServiceBase
     {
+        Server server = new Server();
         public MiPrimerServicio()
         {
             InitializeComponent();
@@ -22,15 +23,15 @@ namespace MiPrimerServicio
             const string nombre = "MiPrimerServicio";
             // Escribe el mensaje deseado en el visor de eventos
             EventLog.WriteEntry(nombre, mensaje);
-            if (Server.isFreePort(Server.ReadFile("password")))
+            if (server.isFreePort(server.ReadFile("password")))
             {
-                EventLog.WriteEntry($"Puerto de escucha: {Server.ReadFile("password")}");
-            } else if(Server.ReadFile("password") == 0)
+                EventLog.WriteEntry($"Puerto de escucha: {server.ReadFile("password")}");
+            } else if(server.ReadFile("password") == 0)
             {
                 EventLog.WriteEntry($"Error al leer el archivo");
-            } else if (Server.Command != "time" || Server.Command != "date" || Server.Command != "all")
+            } else if (server.Command != "time" || server.Command != "date" || server.Command != "all")
             {
-                EventLog.WriteEntry($"Comando no válido {Server.Command}");
+                EventLog.WriteEntry($"Comando no válido {server.Command}");
             }
         }
 
@@ -42,6 +43,8 @@ namespace MiPrimerServicio
             timer.Interval = 10000; // cada 10 segundos
             timer.Elapsed += this.TimerTick;
             timer.Start();
+            
+            server.InitServer();
         }
 
         private int t = 0;

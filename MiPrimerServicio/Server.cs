@@ -15,10 +15,10 @@ namespace MiPrimerServicio
     {
         public bool ServerIsRunning { get; set; } = true;
         public int Port { get; set; } = SearchFreePort(9000);
-        public static string Command { get; set; }
+        public string Command { get; set; }
         //public string Password { get; set; } = ReadFile("password");
         private static Socket socketServer;
-        public static bool isFreePort(int port)
+        public bool isFreePort(int port)
         {
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, port);
             using (socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
@@ -27,10 +27,6 @@ namespace MiPrimerServicio
                 {
                     socketServer.Bind(iPEndPoint);
                     socketServer.Listen(1);
-                }
-                catch (SocketException e) when (e.ErrorCode == (int)SocketError.AddressAlreadyInUse)
-                {
-                    return false;
                 }
                 catch (SocketException e)
                 {
@@ -160,7 +156,7 @@ namespace MiPrimerServicio
             }
         }
 
-        public static int ReadFile(string FileName)
+        public int ReadFile(string FileName)
         {
             try
             {
