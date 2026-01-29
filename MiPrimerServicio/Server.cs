@@ -15,8 +15,30 @@ namespace MiPrimerServicio
     {
         public bool ServerIsRunning { get; set; } = true;
         public int Port { get; set; } = SearchFreePort(9000);
+        public static string Command { get; set; }
         //public string Password { get; set; } = ReadFile("password");
         private static Socket socketServer;
+        public static bool isFreePort(int port)
+        {
+            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, port);
+            using (socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
+                try
+                {
+                    socketServer.Bind(iPEndPoint);
+                    socketServer.Listen(1);
+                }
+                catch (SocketException e) when (e.ErrorCode == (int)SocketError.AddressAlreadyInUse)
+                {
+                    return false;
+                }
+                catch (SocketException e)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         public static int SearchFreePort(int port)
         {
@@ -91,28 +113,27 @@ namespace MiPrimerServicio
                 {
                     sWriter.AutoFlush = true;
                     sWriter.WriteLine("CLIENT");
-                    string command = "";
                     try
                     {
-                        command = sReader.ReadLine();
-                        if (command != null)
+                        Command = sReader.ReadLine();
+                        if (Command != null)
                         {
-                            command = command.Trim();
+                            Command = Command.Trim();
                         }
 
-                        if (command == "time")
+                        if (Command == "time")
                         {
                             sWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss"));
                         }
-                        else if (command == "date")
+                        else if (Command == "date")
                         {
                             sWriter.WriteLine(DateTime.Now.ToString("dd/MM/yyyy"));
                         }
-                        else if (command == "all")
+                        else if (Command == "all")
                         {
                             sWriter.WriteLine(DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"));
                         }
-                        //else if (command == $"close {Password}")
+                        //else if (Command == $"close {Password}")
                         //{
                         //    //close password: Junto con el comando close se debe verificar que viene
                         //    //una contraseña. Si esta es correcta el servidor ha de finalizar y se lo
@@ -122,7 +143,7 @@ namespace MiPrimerServicio
                         //    StopServer(socketServer);
                         //    sWriter.WriteLine("Conexión con el servidor finalizada");
                         //}
-                        //else if (command == $"close")
+                        //else if (Command == $"close")
                         //{
                         //    sWriter.WriteLine("Comando close sin contraseña");
                         //}
@@ -151,7 +172,7 @@ namespace MiPrimerServicio
             }
             catch (IOException io)
             {
-                return 31416;
+                return 0;
             }
         }
     }

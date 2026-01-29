@@ -22,6 +22,16 @@ namespace MiPrimerServicio
             const string nombre = "MiPrimerServicio";
             // Escribe el mensaje deseado en el visor de eventos
             EventLog.WriteEntry(nombre, mensaje);
+            if (Server.isFreePort(Server.ReadFile("password")))
+            {
+                EventLog.WriteEntry($"Puerto de escucha: {Server.ReadFile("password")}");
+            } else if(Server.ReadFile("password") == 0)
+            {
+                EventLog.WriteEntry($"Error al leer el archivo");
+            } else if (Server.Command != "time" || Server.Command != "date" || Server.Command != "all")
+            {
+                EventLog.WriteEntry($"Comando no válido {Server.Command}");
+            }
         }
 
         private System.Timers.Timer timer;
