@@ -23,15 +23,25 @@ namespace MiPrimerServicio
             const string nombre = "MiPrimerServicio";
             // Escribe el mensaje deseado en el visor de eventos
             EventLog.WriteEntry(nombre, mensaje);
-            if (server.isFreePort(server.ReadFile("password")))
+            if (server.isFreePort(server.ReadFile("port")))
             {
-                EventLog.WriteEntry($"Puerto de escucha: {server.ReadFile("password")}");
-            } else if(server.ReadFile("password") == 0)
+                EventLog.WriteEntry($"Puerto de escucha: {server.ReadFile("port")}");
+            }
+            else if (server.ReadFile("port") == 0)
             {
                 EventLog.WriteEntry($"Error al leer el archivo");
-            } else if (server.Command != "time" || server.Command != "date" || server.Command != "all")
+            }
+            else if (server.Command != "time" || server.Command != "date" || server.Command != "all")
             {
                 EventLog.WriteEntry($"Comando no válido {server.Command}");
+            }
+
+            //Si al final tanto el puerto leido del archivo como el puerto por defecto
+            //estuvieran ocupados, se informará en el visor de eventos y finalizará el
+            //servicio.
+            if (server.isFreePort(server.ReadFile("port")))
+            {
+
             }
         }
 
@@ -43,7 +53,7 @@ namespace MiPrimerServicio
             timer.Interval = 10000; // cada 10 segundos
             timer.Elapsed += this.TimerTick;
             timer.Start();
-            
+
             server.InitServer();
         }
 
