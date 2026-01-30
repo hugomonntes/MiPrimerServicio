@@ -58,6 +58,7 @@ namespace MiPrimerServicio
             {
                 WriteEvent($"Comando no válido {server.Command}");
             }
+            server.LogFile();
         }
 
         protected override void OnStop()
