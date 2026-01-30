@@ -160,7 +160,13 @@ namespace MiPrimerServicio
         {
             using (StreamWriter sw = new StreamWriter($"{Environment.GetEnvironmentVariable("programdata")}\\log.txt"))
             {
-                sw.WriteLine($"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}-@{IPAddress.Any}:{Port}] {Command.ToUpper()}");
+                try
+                {
+                    sw.WriteLine($"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}-@{IPAddress.Any}:{Port}] {Command.ToUpper()}");
+                }
+                catch (IOException)
+                {
+                }
             }
         }
 
