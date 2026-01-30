@@ -14,8 +14,8 @@ namespace MiPrimerServicio
     internal class Server
     {
         public bool ServerIsRunning { get; set; } = true;
-        public int Port { get; set; } = ReadFile("port");
-        public string Command { get; set; }
+        public static int Port { get; set; } = ReadFile("port");
+        public static string Command { get; set; }
         //public string Password { get; set; } = ReadFile("password");
         public Socket socketServer;
         public bool isFreePort(int port)
@@ -160,7 +160,7 @@ namespace MiPrimerServicio
         {
             using (StreamWriter sw = new StreamWriter($"{Environment.GetEnvironmentVariable("programdata")}\\log.txt"))
             {
-                
+                sw.WriteLine($"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}-@{IPAddress.Any}:{Port}] {Command.ToUpper()}");
             }
         }
 
