@@ -14,7 +14,7 @@ namespace MiPrimerServicio
     internal class Server
     {
         public bool ServerIsRunning { get; set; } = true;
-        public int Port { get; set; } = SearchFreePort(9000);
+        public int Port { get; set; } = ReadFile("port");
         public string Command { get; set; }
         //public string Password { get; set; } = ReadFile("password");
         private static Socket socketServer;
@@ -156,7 +156,7 @@ namespace MiPrimerServicio
             }
         }
 
-        public int ReadFile(string FileName)
+        public static int ReadFile(string FileName)
         {
             try
             {

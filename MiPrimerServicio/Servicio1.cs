@@ -16,6 +16,7 @@ namespace MiPrimerServicio
         public MiPrimerServicio()
         {
             InitializeComponent();
+            this.AutoLog = false;
         }
         public void WriteEvent(string mensaje)
         {
@@ -23,13 +24,13 @@ namespace MiPrimerServicio
             const string nombre = "MiPrimerServicio";
             // Escribe el mensaje deseado en el visor de eventos
             EventLog.WriteEntry(nombre, mensaje);
-            if (server.isFreePort(server.ReadFile("port")))
+            if (server.isFreePort(server.Port))
             {
-                EventLog.WriteEntry($"Puerto de escucha: {server.ReadFile("port")}");
+                EventLog.WriteEntry($"Puerto de escucha: {server.Port}");
             }
-            else if (server.ReadFile("port") == 0)
+            else if (server.Port == 0)
             {
-                EventLog.WriteEntry($"Error al leer el archivo");
+                EventLog.WriteEntry("Error al leer el archivo");
             }
             else if (server.Command != "time" || server.Command != "date" || server.Command != "all")
             {
@@ -39,7 +40,7 @@ namespace MiPrimerServicio
             //Si al final tanto el puerto leido del archivo como el puerto por defecto
             //estuvieran ocupados, se informará en el visor de eventos y finalizará el
             //servicio.
-            if (server.isFreePort(server.ReadFile("port")))
+            if (!server.isFreePort(server.Port))
             {
 
             }
