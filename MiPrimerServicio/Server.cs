@@ -17,7 +17,7 @@ namespace MiPrimerServicio
         public int Port { get; set; } = ReadFile("port");
         public string Command { get; set; }
         //public string Password { get; set; } = ReadFile("password");
-        private static Socket socketServer;
+        public Socket socketServer;
         public bool isFreePort(int port)
         {
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, port);
@@ -36,7 +36,7 @@ namespace MiPrimerServicio
             return true;
         }
 
-        public static int SearchFreePort(int port)
+        public int SearchFreePort(int port)
         {
             bool portIsFree = true;
             do
@@ -153,6 +153,14 @@ namespace MiPrimerServicio
                         Console.WriteLine(ex.Message);
                     }
                 }
+            }
+        }
+
+        public static void LogFile()
+        {
+            using (StreamWriter sw = new StreamWriter($"{Environment.GetEnvironmentVariable("programdata")}\\log.txt"))
+            {
+                
             }
         }
 

@@ -24,26 +24,6 @@ namespace MiPrimerServicio
             const string nombre = "MiPrimerServicio";
             // Escribe el mensaje deseado en el visor de eventos
             EventLog.WriteEntry(nombre, mensaje);
-            if (server.isFreePort(server.Port))
-            {
-                EventLog.WriteEntry($"Puerto de escucha: {server.Port}");
-            }
-            else if (server.Port == 0)
-            {
-                EventLog.WriteEntry("Error al leer el archivo");
-            }
-            else if (server.Command != "time" || server.Command != "date" || server.Command != "all")
-            {
-                EventLog.WriteEntry($"Comando no válido {server.Command}");
-            }
-
-            //Si al final tanto el puerto leido del archivo como el puerto por defecto
-            //estuvieran ocupados, se informará en el visor de eventos y finalizará el
-            //servicio.
-            if (!server.isFreePort(server.Port))
-            {
-
-            }
         }
 
         private System.Timers.Timer timer;
@@ -56,6 +36,17 @@ namespace MiPrimerServicio
             timer.Start();
 
             server.InitServer();
+
+            if (server.isFreePort(server.Port))
+            {
+                WriteEvent($"Puerto de escucha: {server.Port}");
+            }
+            else if (server.Port == 0)
+            {
+                WriteEvent("Error al leer el archivo");
+            }
+
+            
         }
 
         private int t = 0;
@@ -63,24 +54,26 @@ namespace MiPrimerServicio
         {
             WriteEvent("MiPrimerServicio lleva ejecutándose {t} segundos.");
             t += 10;
+            if (server.Command != "time" || server.Command != "date" || server.Command != "all")
+            {
+                WriteEvent($"Comando no válido {server.Command}");
+            }
         }
 
-        protected override void OnPause()
-        {
-            WriteEvent("MiPrimerServicio en Pausa");
-            timer.Stop();
-        }
-        protected override void OnContinue()
-        {
-            WriteEvent("Continuando MiPrimerServicio");
-            timer.Start();
-        }
         protected override void OnStop()
         {
             WriteEvent("Deteniendo MiPrimerServicio");
             timer.Stop();
             timer.Dispose();
             t = 0;
+            //Si al final tanto el puerto leido del archivo como el puerto por defecto
+            //estuvieran ocupados, se informará en el visor de eventos y finalizará el
+            //servicio.
+            if (!server.isFreePort(server.Port))
+            {
+                EventLog.WriteEntry("Puertos ocupados finalizando servicio...");
+                server.StopServer(server.socketServer);
+            }
         }
     }
 }
