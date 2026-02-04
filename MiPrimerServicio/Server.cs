@@ -13,62 +13,18 @@ namespace MiPrimerServicio
 {
     internal class Server
     {
+        MiPrimerServicio servicio = new MiPrimerServicio();
+        int defaultPort = 31416;
         public bool ServerIsRunning { get; set; } = true;
-        public int Port { get; set; } = ReadFile("port");
-        public string Command { get; set; }
-        //public string Password { get; set; } = ReadFile("password");
         public Socket socketServer;
-        public bool isFreePort(int port)
-        {
-            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, port);
-            using (socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-            {
-                try
-                {
-                    socketServer.Bind(iPEndPoint);
-                    socketServer.Listen(1);
-                }
-                catch (SocketException e)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public int SearchFreePort(int port)
-        {
-            bool portIsFree = true;
-            do
-            {
-                IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, port);
-                using (socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    try
-                    {
-                        portIsFree = true;
-                        socketServer.Bind(iPEndPoint);
-                        socketServer.Listen(1);
-                    }
-                    catch (SocketException e) when (e.ErrorCode == (int)SocketError.AddressAlreadyInUse)
-                    {
-                        portIsFree = false;
-                        port++;
-                    }
-                    catch (SocketException e)
-                    {
-                        portIsFree = false;
-                        port++;
-                    }
-                }
-            }
-            while (!portIsFree);//maxport
-            return port;
-        }
+        string errorValidacion = "Comando no válido ";
+        string errorPuerto = "El archivo no esxiste o el puerto está ocupado, puerto por defecto: ";
+        string puertoOcupado = "Puerto en uso, cerrando servidor";
+        string errorArchivo = "El archivo no existe o tiene algún error";
 
         public void InitServer()
         {
-            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, Port);
+            IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, ReadFile("port"));
             using (socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
                 socketServer.Bind(iPEndPoint);
@@ -85,6 +41,8 @@ namespace MiPrimerServicio
                     }
                     catch (SocketException s)
                     {
+                        servicio.WriteEvent($"{puertoOcupado}");
+                        socketServer.Close();
                     }
                 }
             }
@@ -100,90 +58,89 @@ namespace MiPrimerServicio
         {
             using (socketClient)
             {
-                IPEndPoint clientEndPoint = (IPEndPoint)socketClient.RemoteEndPoint;
-                Console.WriteLine($"Cliente conectado desde {clientEndPoint.Address}:{clientEndPoint.Port}");
-                Encoding encoding = Console.OutputEncoding;
-                using (NetworkStream networkStream = new NetworkStream(socketClient))
-                using (StreamReader sReader = new StreamReader(networkStream, encoding))
-                using (StreamWriter sWriter = new StreamWriter(networkStream, encoding))
+                IPEndPoint ieCliente = (IPEndPoint)socketClient.RemoteEndPoint;
+                Console.WriteLine($"Cliente conectado a {ieCliente.Address} puerto {ieCliente.Port}");
+                Encoding codificacion = Console.OutputEncoding;
+                using (NetworkStream ns = new NetworkStream(socketClient))
+                using (StreamReader sr = new StreamReader(ns))
+                using (StreamWriter sw = new StreamWriter(ns))
                 {
-                    sWriter.AutoFlush = true;
-                    sWriter.WriteLine("CLIENT");
+                    sw.WriteLine("Inicio");
+                    sw.AutoFlush = true;
+                    string msg = "";
+                    DateTime fechaYHora;
                     try
                     {
-                        Command = sReader.ReadLine();
-                        if (Command != null)
+                        msg = sr.ReadLine();
+                        if (msg != null)
                         {
-                            Command = Command.Trim();
-                        }
-
-                        if (Command == "time")
-                        {
-                            sWriter.WriteLine(DateTime.Now.ToString("HH:mm:ss"));
-                        }
-                        else if (Command == "date")
-                        {
-                            sWriter.WriteLine(DateTime.Now.ToString("dd/MM/yyyy"));
-                        }
-                        else if (Command == "all")
-                        {
-                            sWriter.WriteLine(DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"));
-                        }
-                        //else if (Command == $"close {Password}")
-                        //{
-                        //    //close password: Junto con el comando close se debe verificar que viene
-                        //    //una contraseña. Si esta es correcta el servidor ha de finalizar y se lo
-                        //    //indica al cliente.Si no devuelve un mensaje de error al cliente(Debe
-                        //    //diferenciarse el error de contraseña no válida o que no se haya enviado
-                        //    //la contraseña).
-                        //    StopServer(socketServer);
-                        //    sWriter.WriteLine("Conexión con el servidor finalizada");
-                        //}
-                        //else if (Command == $"close")
-                        //{
-                        //    sWriter.WriteLine("Comando close sin contraseña");
-                        //}
-                        else
-                        {
-                            sWriter.WriteLine("ERROR, comando no valido");
+                            switch (msg.Trim())
+                            {
+                                case "time":
+                                    fechaYHora = DateTime.Now;
+                                    sw.WriteLine(fechaYHora.ToString("HH:mm:ss"));
+                                    break;
+                                case "date":
+                                    fechaYHora = DateTime.Now;
+                                    sw.WriteLine(fechaYHora.ToString("dd/MM/yyyy"));
+                                    break;
+                                case "all":
+                                    fechaYHora = DateTime.Now;
+                                    sw.WriteLine(fechaYHora.ToString("dd/MM/yyyy -- HH:mm:ss"));
+                                    break;
+                                default:
+                                    servicio.WriteEvent($"{errorValidacion}{msg}");
+                                    break;
+                            }
+                            Console.WriteLine($"Cliente: {msg}");
+                            LogFile(msg, ieCliente.Address, ieCliente.Port);
                         }
                     }
-                    catch (Exception ex) when (ex is SocketException || ex is IOException)
+                    catch (Exception ex) when (ex is IOException || ex is SocketException)
                     {
-                        Console.WriteLine(ex.Message);
+                        msg = null;
                     }
+                    Console.WriteLine("Conexión cleinte cerrada");
                 }
             }
         }
 
-        public void LogFile()
-        {
-            using (StreamWriter sw = new StreamWriter($"{Environment.GetEnvironmentVariable("programdata")}\\log.txt"))
-            {
-                try
-                {
-                    sw.WriteLine($"[{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}-@{IPAddress.Any}");
-                }
-                catch (IOException)
-                {
-                    sw.WriteLine($"[ERROR: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}");
-                }
-            }
-        }
-
-        public static int ReadFile(string FileName)
+        public void LogFile(string mensaje, IPAddress ip, int puerto)
         {
             try
             {
-                string path = $"{Environment.GetEnvironmentVariable("programdata")}\\{FileName}.txt";
-                using (StreamReader reader = new StreamReader(path))
+                DateTime timeStamp = DateTime.Now;
+                DirectoryInfo dir = new DirectoryInfo(Environment.GetEnvironmentVariable("programdata"));
+                string path = $"{Environment.GetEnvironmentVariable("programdata")}\\log.txt";
+                using (StreamWriter sw = new StreamWriter(path, true))
                 {
-                    return int.TryParse(reader.ReadToEnd().Trim(), out int port) ? port : 31416;
+                    sw.WriteLine($"[{timeStamp.ToString("dd/MM/yyyy - HH:mm:ss")}@{ip}{puerto}] : {mensaje}");
                 }
             }
-            catch (IOException io)
+            catch (Exception e)
             {
-                return 0;
+                servicio.WriteEvent(errorArchivo);
+            }
+        }
+
+        int puertoProv;
+        public int ReadFile(string fileName)
+        {
+            try
+            {
+                DirectoryInfo dir = new DirectoryInfo(Environment.GetEnvironmentVariable("programdata"));
+                string path = $"{Environment.GetEnvironmentVariable("programdata")}\\{fileName}.txt";
+                using (StreamReader sr = new StreamReader(path))
+                {
+                    puertoProv = int.Parse(sr.ReadToEnd());
+                    servicio.WriteEvent($"Puerto escucha: {puertoProv}");
+                    return puertoProv;
+                }
+            }
+            catch (Exception ex) when (ex is FileNotFoundException || ex is IOException || ex is UnauthorizedAccessException)
+            {
+                servicio.WriteEvent($"{errorPuerto}{defaultPort}");
+                return defaultPort;
             }
         }
     }
